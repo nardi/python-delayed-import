@@ -4,8 +4,12 @@ import sys
 from collections.abc import Generator
 from contextlib import AbstractContextManager, contextmanager
 from types import ModuleType
+from typing import TYPE_CHECKING
 
-from lazy_object_proxy import Proxy
+if TYPE_CHECKING:
+    from lazy_object_proxy.simple import Proxy
+else:
+    from lazy_object_proxy import Proxy
 
 from .lazy_module import LazyModule
 from .module_registry import DelayedImportModuleRegistry

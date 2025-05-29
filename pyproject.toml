@@ -1,6 +1,6 @@
 [project]
 name = "delayed-import"
-version = "0.1.0"
+dynamic = ["version"]
 description = "A Python library that lets you delay module imports to when the import is used."
 authors = [
   {name = "Nardi Lam", email = "mail@nardilam.nl"},
@@ -24,7 +24,7 @@ classifiers = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+requires = ["hatchling", "uv-dynamic-versioning"]
 build-backend = "hatchling.build"
 
 [dependency-groups]
@@ -32,6 +32,9 @@ dev = [
     "pytest>=8.3.5",
     "ruff>=0.11.11",
 ]
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
 
 [tool.ruff]
 line-length = 120
