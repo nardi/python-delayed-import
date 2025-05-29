@@ -11,6 +11,20 @@ else:
 logger = logging.getLogger(__name__)
 
 
+class InheritableProxy(Proxy):
+    """Patched version of `lazy_object_proxy.Proxy` that allows wrapping a class and then inheriting from that class."""
+
+    def __mro_entries__(self, bases):
+        """If asked for the MRO entries for the wrapper, we are likely wrapping a class. Try to get the attribute on the
+        wrapped class, and if it does not exist, return the class itself (in a tuple)."""
+
+        def _default_mro_entries(bases):
+            return (self.__wrapped__,)
+
+        mro_entries = getattr(self.__wrapped__, "__mro_entries__", _default_mro_entries)
+        return mro_entries(bases)
+
+
 class LazyModule(ModuleType):
     """
     Wraps a module object, allowing lazy access to a subset of its attributes.
@@ -19,7 +33,7 @@ class LazyModule(ModuleType):
     __slots__ = ["_module_name", "_module_proxy", "_lazy_submodules", "_lazy_attrs"]
 
     def __init__(
-        self, module_name: str, module_proxy: "Proxy", lazy_submodules: tuple[str, ...], lazy_attrs: tuple[str, ...]
+        self, module_name: str, module_proxy: Proxy, lazy_submodules: tuple[str, ...], lazy_attrs: tuple[str, ...]
     ):
         """
         Initialize a LazyModule instance.
@@ -58,6 +72,7 @@ class LazyModule(ModuleType):
             return LazyModule(name, Proxy(lazy_getattr), self._lazy_submodules[1:], self._lazy_attrs)
 
         if name in self._lazy_attrs:
-            return Proxy(lazy_getattr)
+            # The wrapped attribute might be a class, so return an InheritableProxy.
+            return InheritableProxy(lazy_getattr)
 
         return getattr(self._module_proxy, name)
