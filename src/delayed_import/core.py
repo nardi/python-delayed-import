@@ -69,7 +69,7 @@ def __import__(
     Returns:
         ModuleType: The imported module, possibly wrapped for lazy loading.
     """
-    caller_name = globals["__name__"] if globals is not None else None
+    caller_name = (globals or {}).get("__name__")
     logger.debug(f"__import__ called from {caller_name = } with {name = }, {fromlist = }, {level = }")
 
     is_enabled = caller_name is not None and _module_registry.is_enabled_for_module(caller_name)
