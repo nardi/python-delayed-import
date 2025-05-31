@@ -1,8 +1,8 @@
 from enum import Enum
 
-# Enum is a delayed object, since the parent package enabled delayed imports.
+# Enum is a not a delayed object, since it is stdlib.
 
-assert type(Enum).__name__ == "InheritableProxy"
+assert type(Enum).__name__ == "EnumType"
 
 
 class TestEnum(int, Enum):
@@ -10,7 +10,6 @@ class TestEnum(int, Enum):
 
 
 assert issubclass(TestEnum, Enum)
-assert issubclass(TestEnum, Enum.__wrapped__)  # type: ignore
 
 
 print(__name__, end=" ")

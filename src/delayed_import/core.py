@@ -72,11 +72,15 @@ def __import__(
     caller_name = (globals or {}).get("__name__")
     logger.debug(f"__import__ called from {caller_name = } with {name = }, {fromlist = }, {level = }")
 
-    is_enabled = caller_name is not None and _module_registry.is_enabled_for_module(caller_name)
+    module_name, *lazy_submodules = name.split(".")
+    # We disable delayed import of stdlib modules, since these are so common they generally will need to be imported
+    # sooner or later anyway. Not importing them normally can cause problems since they tend to reply more heavily on
+    # (C)Python internals.
+    is_stdlib = module_name in sys.stdlib_module_names
+
+    is_enabled = not is_stdlib and caller_name is not None and _module_registry.is_enabled_for_module(caller_name)
     if not is_enabled:
         return _original_import(name, globals, locals, fromlist, level)
-
-    module_name, *lazy_submodules = name.split(".")
 
     def real_import():
         """
