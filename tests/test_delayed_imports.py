@@ -1,6 +1,9 @@
-import sys  # noqa
-import os
 import logging
+import os
+import sys  # noqa
+from abc import ABC
+from enum import Enum
+
 import pytest
 
 log_level = os.environ.get("LOGLEVEL", "WARNING").upper()
@@ -56,6 +59,15 @@ def test_dynamic_imports(capsys: pytest.CaptureFixture):
     assert "package1.package2.mod2" not in sys.modules
 
     assert TestEnum.x + TestEnum.x == 246
+    assert isinstance(TestEnum.x, TestEnum)
+    assert issubclass(TestEnum, Enum)
 
     assert capsys.readouterr().out.strip() == "package1.package2.mod2"
     assert "package1.package2.mod2" in sys.modules
+
+    class ABCTest(ABC):
+        """This class only exists to test issubclass checks against ABC classes don't crash."""
+
+        pass
+
+    assert not issubclass(TestEnum, ABCTest)

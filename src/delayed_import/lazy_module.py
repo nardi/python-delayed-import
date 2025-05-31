@@ -1,3 +1,4 @@
+import abc
 import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any
@@ -23,6 +24,35 @@ class InheritableProxy(Proxy):
 
         mro_entries = getattr(self.__wrapped__, "__mro_entries__", _default_mro_entries)
         return mro_entries(bases)
+
+    def __subclasscheck__(self, subclass):
+        """Make sure subclass checks are run against the wrapped object(s)."""
+        if type(subclass) is InheritableProxy:
+            subclass = subclass.__wrapped__
+        return issubclass(subclass, self.__wrapped__)  # type: ignore
+
+    def __instancecheck__(self, instance):
+        """Make sure instance checks are run against the wrapped object(s)."""
+        if type(instance) is InheritableProxy:
+            instance = instance.__wrapped__
+        return isinstance(instance, self.__wrapped__)  # type: ignore
+
+
+# Classes with ABCMeta as metaclass have a custom __subclasscheck__ implementation that directly checks whether the
+# argument is a `type`. This is not the case, so we have to patch it. Luckily, there is a level of indirection so we can
+# easily override the function responsible.
+try:
+    _orig_abc_subclasscheck = abc._abc_subclasscheck  # type: ignore
+
+    def _abc_subclasscheck(cls, subclass):
+        if type(subclass) is InheritableProxy:
+            return _abc_subclasscheck(cls, subclass.__wrapped__)
+        return _orig_abc_subclasscheck(cls, subclass)
+
+    abc._abc_subclasscheck = _abc_subclasscheck  # type: ignore
+except ImportError:
+    # If the _abc_subclasscheck function does not exist, we also don't have to patch it.
+    pass
 
 
 class LazyModule(ModuleType):

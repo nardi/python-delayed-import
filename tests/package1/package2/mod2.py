@@ -9,4 +9,8 @@ class TestEnum(int, Enum):
     x = 123
 
 
+assert issubclass(TestEnum, Enum)
+assert issubclass(TestEnum, Enum.__wrapped__)  # type: ignore
+
+
 print(__name__, end=" ")
